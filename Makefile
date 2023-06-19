@@ -30,13 +30,14 @@ RGBDS   :=
 RGBASM  := $(RGBDS)rgbasm
 RGBLINK := $(RGBDS)rgblink
 RGBFIX  := $(RGBDS)rgbfix
+RGBGFX  := $(RGBDS)rgbgfx
 
 ROM = $(BINDIR)/$(ROMNAME).$(ROMEXT)
 
 # Argument constants
 INCDIRS  = src/ src/include/
 WARNINGS = all extra
-ASFLAGS  = -p $(PADVALUE) $(addprefix -i,$(INCDIRS)) $(addprefix -W,$(WARNINGS))
+ASFLAGS  = -p $(PADVALUE) $(addprefix -i,$(INCDIRS)) -l $(addprefix -W,$(WARNINGS))
 LDFLAGS  = -p $(PADVALUE)
 FIXFLAGS = -p $(PADVALUE) -v -i "$(GAMEID)" -k "$(LICENSEE)" -l $(OLDLIC) -m $(MBC) -n $(VERSION) -r $(SRAMSIZE) -t $(TITLE)
 
@@ -109,11 +110,29 @@ endif
 # "Source" assets can thus be safely stored there without `make clean` removing them
 VPATH := src
 
+res/%.1bpp: res/%.png
+	@$(MKDIR_P) $(@D)
+	$(RGBGFX) -d 2 -o $@ $<
+
 # Define how to compress files using the PackBits16 codec
 # Compressor script requires Python 3
-res/%.pb16: src/tools/pb16.py res/%
+res/%.pb16: res/% src/tools/pb16.py
 	@$(MKDIR_P) $(@D)
-	$^ $@
+	$(PY) src/tools/pb16.py $< res/$*.pb16
+
+res/%.pb16.size: res/%
+	@$(MKDIR_P) $(@D)
+	$(call filesize,$<,16) > res/$*.pb16.size
+
+# Define how to compress files using the PackBits8 codec
+# Compressor script requires Python 3
+res/%.pb8: res/% src/tools/pb8.py
+	@$(MKDIR_P) $(@D)
+	$(PY) src/tools/pb8.py $< res/$*.pb8
+
+res/%.pb8.size: res/%
+	@$(MKDIR_P) $(@D)
+	$(call filesize,$<,8) > res/$*.pb8.size
 
 # Catch non-existent files
 # KEEP THIS LAST!!
