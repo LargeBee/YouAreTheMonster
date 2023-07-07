@@ -28,8 +28,12 @@ def save_map_to_file():
                 f.write(game_map[(width * y) + x])
             f.write('\n')
 
+def generate_map():
+    pass
+
 while not command == 'q':
     #Make map from 0s and 1s
+    game_map = generate_map()
     #For every 0 put floor and every 1 put wall (or vice versa)
     #Find a start spot
     print('What would you like to do?')
